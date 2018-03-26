@@ -21,3 +21,9 @@ class handler():
         data = json.loads(data)
         if(data["code"]=="JOIN"):
             return self.add_name(data["new_user"])
+
+
+   $("#submit").click(function(e) {
+          $.post("/", {"code": "JOIN", "new_user":$("input").val()})
+
+          });
