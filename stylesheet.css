@@ -1,0 +1,30 @@
+.peerBar {
+  position: fixed;
+  width: 150px;
+  background-color: #DDD;
+  font-size: 21px;
+  overflow-y: scroll;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  padding-top: 20px;
+}
+
+.peerBar a{
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+}
+
+.peerBar a:hover {
+  color: #f1f1f1;
+}
+
+.main{
+  margin-left: 150px;
+  font-size: 28px;
+  padding: 0px 10px;
+}

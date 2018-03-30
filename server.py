@@ -16,7 +16,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         print('!!!')
-
         length = int(self.headers['Content-Length'])
         data = self.dictize(self.rfile.read(length))
         for x, y in data.items():
@@ -65,13 +64,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
             logged_msgs[p].append([name, msg])
         logged_msgs[name].append(["me", msg])
 
-    def do_GET(self):
-        data = self.rfile.read(length)
-        self.send_response(200)
-        self.send_header("Content-type", 'applictation/json')
-        #self.send_header("Content-length", len(DUMMY_RESPONSE))
-        self.end_headers()
-        #figure out with kyle
+    # def do_GET(self):
+    #     length = int(self.headers['Content-Length'])
+    #     data = self.rfile.read(length)
+    #     self.send_response(200)
+    #     self.send_header("Content-type", 'applictation/json')
+    #     #self.send_header("Content-length", len(DUMMY_RESPONSE))
+    #     self.end_headers()
+    #     #figure out with kyle
 
     def dictize(self, data):
         dataList = data.decode().split('&')
