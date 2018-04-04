@@ -11,18 +11,17 @@ $(document).ready(function(){
 			dataType: 'json',
 			data: $('form').serialize(),
 			success: function(result){
-				result.username = uName;
 				form.remove();
-				var msg = $("<div class = 'main'><p></p></div>");
-				var fwens = $("<div class = 'peerBar'></div>");
-				msg.append("Congratulations " + result.username + "! You have successfully joined the coolest chat around town ;)");
+				var msg = $("<div></div>").addClass("main");
+				var fwens = $("<div></div>").addClass("peerBar");
+				msg.append("<p>Congratulations " + result.username + "! You have successfully joined the coolest chat around town :) </p>");
 				$.each(result.peers, function(index, p) {
-					ppl[i] = p;
-					i = i + 1;
-					fwens.append("<a class = 'peer'> " + ppl + "</a>")
+					fwens.append("<div  class = 'peer'><a> " + p + "</a></div>")
 				})
-				$('#space').html(msg).fadeIn();
-				$('#space').html(fwens).fadeIn();
+				$('#space').append(msg);
+				$('#space').append(fwens);
+
+
 			},
 			contentType: 'application/json'
 		});
@@ -36,11 +35,11 @@ $(document).ready(function(){
 			dataType: 'json',
 			data: ('join=' + this.text() + '&' + uName),
 			success: function(result){
-				var msg = $("<div class = 'main'><p></p></div>");
+				var msgg = $("<div class = 'main'><p></p></div>");
 				$.each(result.members, function(index2, p2){
-					msg.append("Congratulations you have successfully joined a chat with " + p2);
+					msgg.append("Congratulations you have successfully joined a chat with " + p2);
 				})
-				$('.main').html(msg).fadeIn();
+				$('.main').replaceWith(msgg);
 			},
 			contentType: 'application/json'
 

@@ -8,10 +8,11 @@ HOST = socket.gethostname()
 users = []
 logged_msgs = {}
 g = chat_group.Group()
+codes = {'%20':' ', '%22':'"', '%23':'#', '%24':'$', '%25':'%', '%26':'&'}
 
 class RequestHandler(SimpleHTTPRequestHandler):
 
-
+    username = ''
 
 
     def do_POST(self):
@@ -34,11 +35,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             name = name + str(randint(0, 9))
 
         self.send_response(200)
-        self.send_header('Content-type','applictation/json')
+        self.send_header('Content-type','application/json')
         self.end_headers()
         d = {'username':name, 'peers':users}
         self.wfile.write(json.dumps(d).encode())
         users.append(name)
+        this.username = name
         logged_msgs[name] = []
         g.join(name)
         return
@@ -64,19 +66,30 @@ class RequestHandler(SimpleHTTPRequestHandler):
             logged_msgs[p].append([name, msg])
         logged_msgs[name].append(["me", msg])
 
-    # def do_GET(self):
-    #     length = int(self.headers['Content-Length'])
-    #     data = self.rfile.read(length)
-    #     self.send_response(200)
-    #     self.send_header("Content-type", 'applictation/json')
-    #     #self.send_header("Content-length", len(DUMMY_RESPONSE))
-    #     self.end_headers()
-    #     #figure out with kyle
+    def do_GET(self):
+        length = int(self.headers['Content-Length'])
+        data = self.rfile.read(length)
+        for y in range(data.count('%')):
+            x = data.find('%')
+            data = data.replace(data[x:x+3], codes[data[x:x+3]])
+        response = {'messages':logged_msgs[data], 'users':users} #{'messages':[['kyle', 'hey man what's up], ['JOIN', 'denz has joined the chat'],['joe','nothin much homie, wassup my dog DENZ']], 'users':['joe', 'kyle','god']}
+        response = json.dumps(response).encode()
+        self.send_response(200)
+        self.send_header("Content-type", 'applictation/json')
+        self.send_header("Content-length", len(response))
+        self.end_headers()
+        self.wfile.write(response)
+
 
     def dictize(self, data):
         dataList = data.decode().split('&')
         dic = {}
         for elem in dataList:
+            for y in range(elem.count('%')):
+                x = elem.find('%')
+
+                elem = elem.replace(elem[x:x+3], codes[elem[x:x+3]])
+
             temp = elem.split('=')
             dic[temp[0]] = temp[1]
         return dic

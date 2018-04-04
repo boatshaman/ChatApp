@@ -23,7 +23,7 @@ class handler():
             return self.add_name(data["new_user"])
 
 
-   $("#submit").click(function(e) {
-          $.post("/", {"code": "JOIN", "new_user":$("input").val()})
+   # $("#submit").click(function(e) {
+   #        $.post("/", {"code": "JOIN", "new_user":$("input").val()})
 
-          });
+   #        });
