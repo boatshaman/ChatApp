@@ -43,6 +43,17 @@
   z-index: 2;
 }
 
+.footer {
+  position: absolute;
+  right:0;
+  bottom: 0;
+  width: 50%;
+  height: 35px;
+  background-color: purple;
+  z-index: 4;
+  display: none;
+}
+
 #space{
   color: #f1f1f1;
   position: fixed;

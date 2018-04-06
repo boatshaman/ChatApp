@@ -12,13 +12,15 @@ codes = {'%20':' ', '%22':'"', '%23':'#', '%24':'$', '%25':'%', '%26':'&'}
 
 class RequestHandler(SimpleHTTPRequestHandler):
 
-    username = ''
+
 
 
     def do_POST(self):
         print('!!!')
         length = int(self.headers['Content-Length'])
-        data = self.dictize(self.rfile.read(length))
+        dat = self.rfile.read(length)
+        data = self.dictize(dat)
+
         for x, y in data.items():
             print(x+":"+y)
         if('u-name' in data.keys()):
@@ -40,7 +42,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         d = {'username':name, 'peers':users}
         self.wfile.write(json.dumps(d).encode())
         users.append(name)
-        this.username = name
+        self.username = name
         logged_msgs[name] = []
         g.join(name)
         return
@@ -52,7 +54,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         g.connect(name, peer)
         peers = g.list_me(name)[1:]
         for p in peers:
-            logged_msgs[p].append([ 'JOIN', name + " has joined the chat"])
+            logged_msgs[p].append([ 'JOIN: '+ name + " has joined the chat"])
         self.send_response(200)
         self.send_header('Content-type','applictation/json')
         self.end_headers()
@@ -63,22 +65,35 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def do_MSG(self, name, msg):
         peers = g.list_me(name)[1:]
         for p in peers:
-            logged_msgs[p].append([name, msg])
-        logged_msgs[name].append(["me", msg])
+            logged_msgs[p].append([name+': '+ msg])
+        logged_msgs[name].append(["me: " + msg])
 
-    def do_GET(self):
-        length = int(self.headers['Content-Length'])
-        data = self.rfile.read(length)
-        for y in range(data.count('%')):
-            x = data.find('%')
-            data = data.replace(data[x:x+3], codes[data[x:x+3]])
-        response = {'messages':logged_msgs[data], 'users':users} #{'messages':[['kyle', 'hey man what's up], ['JOIN', 'denz has joined the chat'],['joe','nothin much homie, wassup my dog DENZ']], 'users':['joe', 'kyle','god']}
-        response = json.dumps(response).encode()
-        self.send_response(200)
-        self.send_header("Content-type", 'applictation/json')
-        self.send_header("Content-length", len(response))
-        self.end_headers()
-        self.wfile.write(response)
+
+    def do_GET(self): #{'messages':[['kyle', 'hey man what's up], ['JOIN', 'denz has joined the chat'],['joe','nothin much homie, wassup my dog DENZ']], 'users':['joe', 'kyle','god']}
+        if(self.path[:8] == '/update/'):
+            q_mark = self.path.find('?')
+            amper = self.path.find('&')
+            name = self.path[q_mark+1:amper]
+            if(name!='undefined'):
+                tempUsr = users[:]
+                tempUsr.remove(name)
+                if(len(g.list_me(name))==1):
+                    response = {'flags':'idle', 'users':tempUsr}
+
+                else:
+                    response = {'flags':'chatting','messages':logged_msgs[name], 'users':tempUsr}
+                    logged_msgs[name] = []
+            else:
+                response = {'flags':'loggedOut'}
+
+            response = json.dumps(response).encode()
+            self.send_response(200)
+            self.send_header("Content-type", 'applictation/json')
+            self.send_header("Content-length", len(response))
+            self.end_headers()
+            self.wfile.write(response)
+        else:
+            super().do_GET()
 
 
     def dictize(self, data):

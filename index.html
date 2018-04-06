@@ -6,12 +6,18 @@
 	</head>
 	<body>
 		<div id = "space">
-			<form action = "/" method = "POST">
+			<form action = "/" method = "POST" name = "signUp">
 				<fieldset>
 					Username:
 					<input type="text" name="u-name" id ="u-name">
 					<input type="submit" value="Sign Up">
 				</fieldset>
+			</form>
+		</div>
+		<div class = "footer">
+			<form action = "/" method = "POST" name = "Message" onsubmit="sendMessage()">
+					<input type="text" name="msg" id = "msg">
+					<input type="submit" value="Send">
 			</form>
 		</div>
 	</body>
