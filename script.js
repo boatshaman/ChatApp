@@ -6,6 +6,18 @@ $.ajaxSetup({ cache: false });
 $(document).ready(function(){
 	var ppl = [];
 	var i = 0;
+	// $('input[name="u-name"]').focus(function(){
+	// 	$('form[name="signUp"]').addClass("overlay");
+	// 	$('.input-holder').css("background-color", "white");
+	// 	$('.input-holder').css("opacity", "white");
+	//
+	// });
+	// $('input[name="u-name"]').blur(function(){
+	// 	$('form[name="signUp"]').removeClass("overlay");
+	// 	$('.input-holder').css("background-color", "black");
+	//
+	// });
+
 	$('form[name="signUp"]').on('submit', SignUp);
 	//$('form[name="Message"]').on('submit', sendMessage);
 	// $('.peer').click(function(e) {
@@ -32,6 +44,18 @@ $(document).ready(function(){
 
 });
 
+function searchToggle(obj, evt){
+    var container = $(obj).closest('.search-wrapper');
+        if(!container.hasClass('active')){
+            container.addClass('active');
+            evt.preventDefault();
+        }
+        else if(container.hasClass('active') && $(obj).closest('.input-holder').length == 0){
+            container.removeClass('active');
+            // clear input
+             //$('form[name="signUp"]').trigger("submit");
+        }
+}
 function SignUp(){
 	event.preventDefault();
 	var form = $(this);
@@ -41,16 +65,38 @@ function SignUp(){
 		dataType: 'json',
 		data: $('form[name="signUp"]').serialize(),
 		success: function(result){
+			$('.search-wrapper').fadeOut();
+			$('.input-holder').fadeOut();
+			$('.u-name').fadeOut();
+			$('.search-icon').fadeOut();
 			username = result.username;
-			form.remove();
+			//form.remove();
 			var msg = $("<div></div>").addClass("main");
+			var pop = $("<div></div>").addClass("popup");
 			var fwens = $("<div></div>").addClass("peerBar");
-			msg.append("<p>Congratulations " + result.username + "! You have successfully joined the coolest chat around town :) </p>");
+			var textForm = $('<form action = "/" method = "POST" name = "Message" class="Message" id="Message" onsubmit="sendMessage()"></form>')
+			var cushion = $('<div class=></div>').addClass('footer');
+			var textbox = $('<div class=></div>').addClass('cushion');
+			var table = $("<table></table>").addClass("chatTable");
+			var tableDIV = $("<div></div>").addClass("tableDIV");
+			textbox.append('<input type="text" form="Message" name="msg" id = "msg" class="msg" autocomplete="off">');
+			textbox.append('<input type="submit" form="Message" class="send_msg" value="Send">');
+			cushion.append(textbox);
+			pop.append("<p class='join'>Congratulations " + result.username + "! You have successfully joined the coolest chat around town :) </p>");
+			msg.append(pop);
 			$.each(result.peers, function(index, p) {
 				fwens.append("<div  class = 'peer' onclick='Join(\""+p+"\")'><a> " + p + "</a></div>")
 			})
+			// $('#space:before').css("animation", "fade-slide-up 2s .5s cubic-bezier(0, .5, 0, 1) forwards");
+			$('#space').css("justify-content", "flex-start");
+			$('#space').css("align-items", "flex-start");
 			$('#space').append(msg);
 			$('#space').append(fwens);
+			$('#space').append(textForm);
+			$('#space').append(cushion);
+			$(".main").append(tableDIV);
+			$('.tableDIV').append(table);
+			$('space:after').css("animation", "ffade-slide-down 2s .5s cubic-bezier(0, .5, 0, 1) forwards");
 			log_on = true;
 
 		},
@@ -83,14 +129,16 @@ function Join(peer){
 			dataType: 'json',
 			data: ('join=' + peer + '&name=' + username),
 			success: function(result){
-
-				//var msgg = $("<div class = 'main'><p></p></div>");
+				var msg = $("<div></div>").addClass("main");
+				var pop = $("<div></div>").addClass("popup");
+				//pop.append("<p class='join'>Congratulations you have successfully joined a chat with " + p2 + "</p>");
+				msg.append(pop);
 				$.each(result.members, function(index2, p2){
 					//msgg.append("Congratulations you have successfully joined a chat with " + p2);
-					$('.main').append("Congratulations you have successfully joined a chat with " + p2);
+					$('.main').append(msg);
 				})
 				//$('.main').replaceWith(msgg);
-				$('.footer').css("display", "inline");
+
 			},
 			contentType: 'application/json'
 
@@ -99,42 +147,37 @@ function Join(peer){
 
 
 
-(function worker() {
+	(function worker() {
 
-  $.ajax({
-		type: 'GET',
-    url: '/update/?'+username,
-    success: function(result) {
-      if(result.flags=='idle'){updateIdle(result);}
-			else if(result.flags=='chatting'){updateChatting(result);}
-    },
-    complete: function() {
-      // Schedule the next request when the current one's complete
-      setTimeout(worker, 3000);
-    }
-  });
-})();
+	  $.ajax({
+			type: 'GET',
+	    url: '/update/?'+username,
+	    success: function(result) {
+	      if(result.flags=='online'){updateOnline(result);}
 
-function updateIdle(result){
-	$('.peerBar').empty();
-	$.each(result.users, function(index, p) {
-		$('.peerBar').append("<div  class = 'peer' onclick='Join(\""+p+"\")'><a> " + p + "</a></div>");
-	})
-}
-
-function updateChatting(result){
-	$('.footer').css("display", "inline");
+	    },
+	    complete: function() {
+	      // Schedule the next request when the current one's complete
+	      setTimeout(worker, 2000);
+	    }
+	  });
+	})();
 
 
-	$('.peerBar').empty();
-	$.each(result.users, function(index, p) {
-		$('.peerBar').append("<div  class = 'peer' onclick='Join(\""+p+"\")'><a> " + p + "</a></div>");
-	})
+
+	function updateOnline(result){
+
+		$('.peerBar').empty();
+		$.each(result.users, function(index, p) {
+			$('.peerBar').append("<div  class = 'peer' onclick='Join(\""+p+"\")'><a> " + p + "</a></div>");
+		})
 
 
-	$.each(result.messages, function(index, p){
-		$('.main').append('<p class="chat">'+p+'</p>');
-	})
+		$.each(result.messages, function(index, p){
+
+			$('.chatTable').append(p);
+
+		})
 
 
-}
+	}

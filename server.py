@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, os, socket, json, chat_group
+import sys, os, socket, json, chat_group, time
 from socketserver import ThreadingMixIn
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from random import *
@@ -9,18 +9,16 @@ users = []
 logged_msgs = {}
 g = chat_group.Group()
 codes = {'%20':' ', '%22':'"', '%23':'#', '%24':'$', '%25':'%', '%26':'&'}
+activityLog = {}
 
 class RequestHandler(SimpleHTTPRequestHandler):
 
 
-
-
     def do_POST(self):
-        print('!!!')
         length = int(self.headers['Content-Length'])
         dat = self.rfile.read(length)
         data = self.dictize(dat)
-
+        print(data)
         for x, y in data.items():
             print(x+":"+y)
         if('u-name' in data.keys()):
@@ -29,6 +27,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.do_JOIN(data['name'], data['join'])
         elif ('msg' in data.keys()):
             self.do_MSG(data['name'], data['msg'])
+
 
         return
 
@@ -50,11 +49,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 
     def do_JOIN(self, name, peer):
+        if(len(g.list_me(name))!=1):
+            logged_msgs[name].append('<tr><td height="50px"><p class="peerMsg"> You are already in chat group! Close window and reopen to change group.</p></td></tr>')
+            return
         #send back list of all peers connected to
+
         g.connect(name, peer)
         peers = g.list_me(name)[1:]
         for p in peers:
-            logged_msgs[p].append([ 'JOIN: '+ name + " has joined the chat"])
+            logged_msgs[p].append('<tr><td height="50px"><p class="peerMsg">'+ name + ' has joined the chat</p></td></tr>')
+            logged_msgs[name].append('<tr><td height="50px"><p class="peerMsg"> You are now connected to '+ p+'</p></td></tr>')
         self.send_response(200)
         self.send_header('Content-type','applictation/json')
         self.end_headers()
@@ -65,8 +69,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def do_MSG(self, name, msg):
         peers = g.list_me(name)[1:]
         for p in peers:
-            logged_msgs[p].append([name+': '+ msg])
-        logged_msgs[name].append(["me: " + msg])
+            logged_msgs[p].append('<tr><td height="50px"><p class="peerMsg">'+name+' : '+ msg+'</p></td></tr>')
+        logged_msgs[name].append('<tr><td height="50px"><p class="selfMsg"> me: ' + msg+'</p></td></tr>')
+
 
 
     def do_GET(self): #{'messages':[['kyle', 'hey man what's up], ['JOIN', 'denz has joined the chat'],['joe','nothin much homie, wassup my dog DENZ']], 'users':['joe', 'kyle','god']}
@@ -74,15 +79,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             q_mark = self.path.find('?')
             amper = self.path.find('&')
             name = self.path[q_mark+1:amper]
-            if(name!='undefined'):
+            if(name in users):
+                activityLog[name] = time.time() #log the users time
                 tempUsr = users[:]
                 tempUsr.remove(name)
-                if(len(g.list_me(name))==1):
-                    response = {'flags':'idle', 'users':tempUsr}
-
-                else:
-                    response = {'flags':'chatting','messages':logged_msgs[name], 'users':tempUsr}
-                    logged_msgs[name] = []
+                response = {'flags':'online','messages':logged_msgs[name], 'users':tempUsr}
+                logged_msgs[name] = []
             else:
                 response = {'flags':'loggedOut'}
 
@@ -112,6 +114,34 @@ class RequestHandler(SimpleHTTPRequestHandler):
 class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
     pass
 
+def LOGOUT(name):
+    print(name + "is logging out!!")
+    if(name not in users):
+        return
+
+    peers = g.list_me(name)[1:]
+    g.leave(name)
+    for p in peers:
+        pList = g.list_me(p)[1:]
+        if(len(pList)==0):
+            logged_msgs[p].append('<tr><td height="50px"><p class="peerMsg">'+name+' has logged off. You are free to connect to others.</p></td><tr>')
+        else:
+            logged_msgs[p].append('<tr><td height="50px"><p class="peerMsg">'+name+' has logged off. You are still connect to: '+(', '.join(pList))+'</p></td><tr>')
+
+    users.remove(name)
+
+def manageActive():
+    delUsers = []
+    tempActivLog = dict(activityLog)
+    for k, v in tempActivLog.items():
+        tim = time.time() - v
+
+        if(tim > 5):
+            LOGOUT(k)
+            delUsers.append(k)
+    for u in delUsers:
+        del activityLog[u]
+
 
 '''
 This sets the listening port, default port 8080
@@ -136,5 +166,7 @@ try:
     while 1:
         sys.stdout.flush()
         server.handle_request()
+        manageActive()
+
 except KeyboardInterrupt:
     print("\nShutting down server per users request.")

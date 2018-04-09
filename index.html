@@ -6,19 +6,28 @@
 	</head>
 	<body>
 		<div id = "space">
-			<form action = "/" method = "POST" name = "signUp">
-				<fieldset>
-					Username:
-					<input type="text" name="u-name" id ="u-name">
-					<input type="submit" value="Sign Up">
-				</fieldset>
+			<form action = "/" method = "POST" name = "signUp" id = "signUp" class = "signUp" autocomplete="off">
 			</form>
+			<div class = "search-wrapper">
+				<div class = "input-holder">
+
+						<!-- <fieldset> -->
+							<!-- Username: -->
+							<input type="text" form="signUp" class="u-name" name="u-name" id ="u-name" autocomplete="off" placeholder="Please enter your username...">
+							<!-- <input type="submit" name="submit-signUp" value="Sign Up"> -->
+
+						<!-- </fieldset> -->
+
+					<button class="search-icon" onclick="searchToggle(this, event);"><span></span></button>
+				</div>
+				<span class="close" onclick="searchToggle(this, event);"></span>
+			</div>
 		</div>
-		<div class = "footer">
+		<!-- <div class = "footer">
 			<form action = "/" method = "POST" name = "Message" onsubmit="sendMessage()">
 					<input type="text" name="msg" id = "msg">
 					<input type="submit" value="Send">
 			</form>
-		</div>
+		</div> -->
 	</body>
 </html>
